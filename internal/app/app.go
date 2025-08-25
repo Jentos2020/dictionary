@@ -8,6 +8,7 @@ import (
 	"leetgo/internal/app/handler"
 	"leetgo/internal/app/store"
 	"leetgo/internal/app/store/pg"
+	"leetgo/internal/consts"
 
 	"log/slog"
 	"os"
@@ -60,7 +61,7 @@ func (app *App) Run(ctx context.Context) error {
 		}
 	}
 
-	if err := c.FillTrieWithWords(ctx, ""); err != nil {
+	if err := c.FillTrieWithWords(ctx, consts.DefaultDict); err != nil {
 		return err
 	}
 

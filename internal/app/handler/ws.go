@@ -2,7 +2,6 @@ package handler
 
 import (
 	"encoding/json"
-	"fmt"
 	"leetgo/internal/entity"
 
 	"github.com/gofiber/websocket/v2"
@@ -10,14 +9,21 @@ import (
 
 func WSHandler(h *Handler) func(*websocket.Conn) {
 	return func(c *websocket.Conn) {
-		defer c.Close()
+		clientAddr := c.RemoteAddr().String()
+		h.c.Logger.Debug("WebSocket connection established", "client", clientAddr)
+
+		defer func() {
+			h.c.Logger.Debug("WebSocket connection closed", "client", clientAddr)
+			c.Close()
+		}()
 
 		for {
 			_, msg, err := c.ReadMessage()
 			if err != nil {
-				h.c.Logger.Error(fmt.Sprintf("WebSocket read error %s", err))
+				h.c.Logger.Error("WebSocket read error", "client", clientAddr, "error", err)
 				break
 			}
+			h.c.Logger.Debug("WebSocket received", "client", clientAddr, "msg", string(msg))
 
 			var req entity.SearchRequest
 			if err := json.Unmarshal(msg, &req); err != nil {
@@ -35,7 +41,7 @@ func WSHandler(h *Handler) func(*websocket.Conn) {
 
 			respJSON, _ := json.Marshal(resp)
 			if err := c.WriteMessage(websocket.TextMessage, respJSON); err != nil {
-				h.c.Logger.Error(fmt.Sprintf("WS write error %s", err))
+				h.c.Logger.Error("WebSocket write error", "client", clientAddr, "error", err)
 				break
 			}
 		}

@@ -96,3 +96,28 @@ func (t *Trie) Delete(word string) {
 		}
 	}
 }
+
+func (t *Trie) Copy() *Trie {
+	t.mu.RLock()
+	defer t.mu.RUnlock()
+
+	newTrie := &Trie{
+		Root: t.copyNode(t.Root),
+		mu:   sync.RWMutex{},
+	}
+	return newTrie
+}
+
+func (t *Trie) copyNode(node *TrieNode) *TrieNode {
+	if node == nil {
+		return nil
+	}
+	newNode := &TrieNode{
+		Children: make(map[rune]*TrieNode, len(node.Children)),
+		IsEnd:    node.IsEnd,
+	}
+	for char, child := range node.Children {
+		newNode.Children[char] = t.copyNode(child)
+	}
+	return newNode
+}

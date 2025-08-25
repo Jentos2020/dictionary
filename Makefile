@@ -6,3 +6,6 @@ run.seed:
 
 run:
 	go run ./cmd/app
+
+run.front:
+	npm --prefix ./frontend run dev
