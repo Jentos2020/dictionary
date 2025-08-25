@@ -1,0 +1,18 @@
+log:
+  level: INFO
+db:
+  host: localhost
+  port: 5432
+  pass: securepass
+  user: dict_user
+  name: dictionary_aggregator
+  maxConn: 20
+  maxIdle: 5
+  schema: words
+  batchSize: 1000
+app:
+  port: 8080
+  testPort: 8888
+  env: local
+  dicts: "./data/"
+  migrationsPath: "./migrations"

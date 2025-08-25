@@ -1,0 +1,104 @@
+openapi: 3.0.0
+info:
+  title: Dictionary API
+  version: 1.0.0
+paths:
+  /words:
+    post:
+      summary: Add new words
+      operationId: addWord
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Words'
+      responses:
+        '200':
+          description: Added words
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WordsResponse'
+
+  /words/{data}:
+    put:
+      summary: Update a word
+      operationId: updateWord
+      parameters:
+        - name: data
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Word'
+      responses:
+        '200':
+          description: Updated word
+
+    delete:
+      summary: Delete a word
+      operationId: removeWord
+      parameters:
+        - name: data
+          in: path
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                dictionary:
+                  type: string
+                  description: Dictionary name (e.g., "russian")
+              required:
+                - dictionary
+      responses:
+        '204':
+          description: Deleted
+
+  /dictionaries/add/{name}:
+    post:
+      summary: Load dictionary from TXT file
+      operationId: loadDictionary
+      parameters:
+        - name: name
+          example: DATA
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Dictionary loaded/updated
+        '400':
+          description: Invalid request or file not found
+        '500':
+          description: Internal error
+components:
+  schemas:
+    Word:
+      type: object
+      properties:
+        data:
+          type: string
+        dictionary:
+          type: string
+          description: Dictionary table name (e.g., "russian")
+    Words:
+      type: array
+      items:
+        $ref: '#/components/schemas/Word'
+    WordsResponse:
+      type: array
+      items:
+        $ref: '#/components/schemas/Word'
