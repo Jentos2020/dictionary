@@ -2,36 +2,31 @@ import { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Typography } from '@mui/material';
 import axios from 'axios';
 
-function UpdateModal({ open, onClose, word, dictionary, onUpdateComplete }) {
-  const [newWord, setNewWord] = useState(word);
+function AddDefinitionModal({ open, onClose, word, dictionary, onAddComplete }) {
+  const [definition, setDefinition] = useState('');
   const [success, setSuccess] = useState(false);
 
-  const handleUpdate = async (e) => {
+  const handleAdd = async (e) => {
     e.preventDefault();
-    if (!newWord) {
-      alert('Новое слово обязательно');
+    if (!definition) {
+      alert('Определение обязательно');
       return;
     }
     try {
-      await axios.put(`/api/words/${word}`, { 
-        data: newWord, 
-        dictionary: dictionary 
-      }, {
-        headers: { 'Content-Type': 'application/json' }
-      });
+      await axios.post('/api/definitions', { word, definition, dictionary });
       setSuccess(true);
     } catch (err) {
       console.log('Axios error:', err, err.response);
-      alert('Ошибка при обновлении слова: ' + (err.response?.data || err.message));
+      alert('Ошибка при добавлении определения: ' + (err.response?.data || err.message));
     }
   };
 
   const handleClose = () => {
     if (success) {
-      onUpdateComplete();
+      onAddComplete();
     }
     setSuccess(false);
-    setNewWord(word);
+    setDefinition('');
     onClose();
   };
 
@@ -41,7 +36,7 @@ function UpdateModal({ open, onClose, word, dictionary, onUpdateComplete }) {
         <>
           <DialogTitle>Успех</DialogTitle>
           <DialogContent>
-            <Typography>Слово "{word}" обновлено на "{newWord}" в словаре "{dictionary}".</Typography>
+            <Typography>Определение для "{word}" добавлено в словарь "{dictionary}".</Typography>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose} color="primary">ОК</Button>
@@ -49,20 +44,21 @@ function UpdateModal({ open, onClose, word, dictionary, onUpdateComplete }) {
         </>
       ) : (
         <>
-          <DialogTitle>Изменить слово</DialogTitle>
+          <DialogTitle>Добавить определение</DialogTitle>
           <DialogContent>
+            <Typography>Добавить определение для "{word}" в словарь "{dictionary}":</Typography>
             <TextField
               fullWidth
-              label="Новое слово"
-              value={newWord}
-              onChange={(e) => setNewWord(e.target.value)}
+              label="Определение"
+              value={definition}
+              onChange={(e) => setDefinition(e.target.value)}
               variant="outlined"
               sx={{ mt: 1 }}
             />
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose}>Отмена</Button>
-            <Button onClick={handleUpdate} color="primary">Изменить</Button>
+            <Button onClick={handleAdd} color="primary">Добавить</Button>
           </DialogActions>
         </>
       )}
@@ -70,4 +66,4 @@ function UpdateModal({ open, onClose, word, dictionary, onUpdateComplete }) {
   );
 }
 
-export default UpdateModal;
+export default AddDefinitionModal;

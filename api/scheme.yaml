@@ -84,6 +84,96 @@ paths:
           description: Invalid request or file not found
         '500':
           description: Internal error
+  /definitions:
+      post:
+        summary: Add definition
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Definition'
+        responses:
+          '200':
+            description: OK
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Definition'
+          '500':
+            description: Internal error
+  /definitions/{word}:
+      get:
+        summary: Get definition
+        parameters:
+          - name: word
+            in: path
+            required: true
+            schema:
+              type: string
+          - name: dictionary
+            in: query
+            schema:
+              type: string
+              default: russian
+        responses:
+          '200':
+            description: OK
+            content:
+              application/json:
+                schema:
+                  type: object
+                  properties:
+                    word: {type: string}
+                    definition: {type: string}
+          '404':
+            description: Not found
+      put:
+        summary: Update definition
+        parameters:
+          - name: word
+            in: path
+            required: true
+            schema:
+              type: string
+          - name: dictionary
+            in: query
+            schema:
+              type: string
+              default: russian
+        requestBody:
+          required: true
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  definition:
+                    type: string
+                required: [definition]
+        responses:
+          '200':
+            description: OK
+
+      delete:
+        summary: Delete definition
+        parameters:
+          - name: word
+            in: path
+            required: true
+            schema:
+              type: string
+          - name: dictionary
+            in: query
+            schema:
+              type: string
+              default: russian
+        responses:
+          '204':
+            description: No content
+          '404':
+            description: Not found
+
 components:
   schemas:
     Word:
@@ -102,3 +192,19 @@ components:
       type: array
       items:
         $ref: '#/components/schemas/Word'
+    Definition:
+      type: object
+      properties:
+        word:
+          type: string
+          example: "example"
+        definition:
+          type: string
+          example: "Example definition text."
+        dictionary:
+          type: string
+          default: russian
+          example: "russian"
+      required:
+        - word
+        - definition

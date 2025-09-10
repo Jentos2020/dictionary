@@ -2,10 +2,12 @@ package pg
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
 
+	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
 
@@ -42,7 +44,7 @@ func (l *SlogAdapter) Trace(ctx context.Context, begin time.Time, fc func() (str
 	sql, rows := fc()
 	duration := time.Since(begin)
 
-	if err != nil && l.level >= logger.Error {
+	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) && l.level >= logger.Error {
 		l.log.ErrorContext(ctx, "SQL error",
 			slog.String("query", sql),
 			slog.Int64("rows", rows),

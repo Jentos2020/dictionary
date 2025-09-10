@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
-import { TextField, Paper, List, ListItem, ListItemText, Button, Box } from '@mui/material';
+import { TextField, Paper, List, ListItem, ListItemText, Button, Box, Typography } from '@mui/material';
+import AddDefinitionModal from './AddDefinitionModal.jsx';
 import AddModal from './AddModal.jsx';
 import WordActions from './WordActions.jsx';
 
@@ -7,13 +8,15 @@ function SearchInput({ dictionary }) {
   const [input, setInput] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [selectedWord, setSelectedWord] = useState(null);
-  const [showAddModal, setShowAddModal] = useState(false);
+  const [definition, setDefinition] = useState(null);
+  const [definitionError, setDefinitionError] = useState(null);
+  const [showAddDefinitionModal, setShowAddDefinitionModal] = useState(false);
+  const [showAddWordModal, setShowAddWordModal] = useState(false);
   const ws = useRef(null);
   const reconnectTimeout = useRef(null);
 
   useEffect(() => {
     const connectWebSocket = () => {
-      // Проверяем, нет ли уже активного соединения
       if (ws.current && ws.current.readyState === WebSocket.OPEN) {
         console.log('WebSocket already connected');
         return;
@@ -23,7 +26,7 @@ function SearchInput({ dictionary }) {
 
       ws.current.onopen = () => {
         console.log('WebSocket connected');
-        clearTimeout(reconnectTimeout.current); // Очищаем таймер переподключения
+        clearTimeout(reconnectTimeout.current);
       };
 
       ws.current.onclose = () => {
@@ -33,13 +36,23 @@ function SearchInput({ dictionary }) {
 
       ws.current.onerror = (err) => {
         console.error('WebSocket error:', err);
-        ws.current.close(); // Закрываем при ошибке, чтобы сработал onclose
+        ws.current.close();
       };
 
       ws.current.onmessage = (event) => {
         try {
           const data = JSON.parse(event.data);
-          setSuggestions(data.words || []);
+          if (data.type === 'definition') {
+            setDefinitionError(null);
+            if (data.error) {
+              setDefinitionError(data.error);
+              setDefinition(null);
+            } else {
+              setDefinition(data.definition);
+            }
+          } else {
+            setSuggestions(data.words || []);
+          }
         } catch (err) {
           console.error('Invalid WS message:', err);
         }
@@ -60,9 +73,11 @@ function SearchInput({ dictionary }) {
     const value = e.target.value;
     setInput(value);
     setSelectedWord(null);
+    setDefinition(null);
+    setDefinitionError(null);
 
     if (value && ws.current?.readyState === WebSocket.OPEN) {
-      ws.current.send(JSON.stringify({ prefix: value }));
+      ws.current.send(JSON.stringify({ type: 'search', prefix: value }));
     } else {
       setSuggestions([]);
     }
@@ -72,16 +87,26 @@ function SearchInput({ dictionary }) {
     setInput(word.data);
     setSuggestions([]);
     setSelectedWord(word.data);
+    if (ws.current?.readyState === WebSocket.OPEN) {
+      ws.current.send(JSON.stringify({ type: 'get_definition', word: word.data, dictionary }));
+    }
   };
 
   const handleKeyDown = (e) => {
     if (e.key === 'Enter' && input) {
       setSuggestions([]);
       setSelectedWord(input);
+      if (ws.current?.readyState === WebSocket.OPEN) {
+        ws.current.send(JSON.stringify({ type: 'get_definition', word: input, dictionary }));
+      }
     } else if (e.key === 'Escape') {
       setSuggestions([]);
+      setDefinition(null);
+      setDefinitionError(null);
     }
   };
+
+  const isWordFound = suggestions.length > 0 || selectedWord;
 
   return (
     <Box>
@@ -99,6 +124,7 @@ function SearchInput({ dictionary }) {
             {suggestions.map((word, index) => (
               <ListItem
                 key={index}
+                button
                 onClick={() => handleSelectSuggestion(word)}
               >
                 <ListItemText primary={word.data} />
@@ -107,15 +133,41 @@ function SearchInput({ dictionary }) {
           </List>
         </Paper>
       )}
-      <Button
-        variant="contained"
-        color="primary"
-        sx={{ mt: 1 }}
-        disabled={!input}
-        onClick={() => setShowAddModal(true)}
-      >
-        Добавить слово
-      </Button>
+      {definition && (
+        <Box sx={{ mt: 2, textAlign: 'left' }}>
+          <Typography variant="subtitle1" fontWeight="bold">Определение:</Typography>
+          <Typography variant="body1">{definition}</Typography>
+        </Box>
+      )}
+      {definitionError && (
+        <Box sx={{ mt: 2, textAlign: 'left' }}>
+          <Typography variant="body1" color="error">
+            Определение не найдено
+          </Typography>
+        </Box>
+      )}
+      <Box sx={{ mt: 1, display: 'flex', gap: 1 }}>
+        {!isWordFound && (
+          <Button
+            variant="contained"
+            color="primary"
+            disabled={!input}
+            onClick={() => setShowAddWordModal(true)}
+          >
+            Добавить слово
+          </Button>
+        )}
+        {definitionError === 'Definition not found' && (
+          <Button
+            variant="contained"
+            color="primary"
+            disabled={!input}
+            onClick={() => setShowAddDefinitionModal(true)}
+          >
+            Добавить определение
+          </Button>
+        )}
+      </Box>
       {selectedWord && (
         <WordActions
           word={selectedWord}
@@ -123,17 +175,33 @@ function SearchInput({ dictionary }) {
           onActionComplete={() => {
             setInput('');
             setSelectedWord(null);
+            setDefinition(null);
+            setDefinitionError(null);
           }}
         />
       )}
       <AddModal
-        open={showAddModal}
-        onClose={() => setShowAddModal(false)}
+        open={showAddWordModal}
+        onClose={() => setShowAddWordModal(false)}
         word={input}
         dictionary={dictionary}
         onAddComplete={() => {
           setInput('');
           setSelectedWord(null);
+          setDefinition(null);
+          setDefinitionError(null);
+        }}
+      />
+      <AddDefinitionModal
+        open={showAddDefinitionModal}
+        onClose={() => setShowAddDefinitionModal(false)}
+        word={input}
+        dictionary={dictionary}
+        onAddComplete={() => {
+          setInput('');
+          setSelectedWord(null);
+          setDefinition(null);
+          setDefinitionError(null);
         }}
       />
     </Box>

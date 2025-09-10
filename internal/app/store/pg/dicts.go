@@ -18,11 +18,11 @@ import (
 func (db *PGStore) GetDictionaryTables(ctx context.Context, schema string) ([]string, error) {
 	var tables []string
 	err := db.Db.WithContext(ctx).Raw(`
-	SELECT table_name 
-	FROM information_schema.tables 
-	WHERE table_schema = ? 
-	AND table_type = 'BASE TABLE' 
-	AND table_name != ?`, schema, consts.MigrationsTable).Scan(&tables).Error
+		SELECT table_name 
+		FROM information_schema.tables 
+		WHERE table_schema = ? 
+		AND table_type = 'BASE TABLE' 
+		AND table_name != ?`, schema, consts.MigrationsTable).Scan(&tables).Error
 	return tables, err
 }
 
@@ -109,6 +109,105 @@ func (db *PGStore) WriteDictsToDb(ctx context.Context, cfg config.Config, fileNa
 			}
 
 			db.log.Info(fmt.Sprintf("Seeded table %s", fullTableName))
+		}
+	}
+
+	return nil
+}
+
+func (db *PGStore) SeedDefinitions(ctx context.Context, cfg config.Config, fileName string) error {
+	var files []os.DirEntry
+	defaultFileName := "definitions.txt"
+
+	if fileName != "" {
+		target := filepath.Join(cfg.Dicts, fileName)
+		if _, err := os.Stat(target); err != nil {
+			return fmt.Errorf("definition file %s not found: %w", target, err)
+		}
+		files = []os.DirEntry{fileEntry{target, fileName}}
+	} else {
+		defaultPath := filepath.Join(cfg.Dicts, defaultFileName)
+		if _, err := os.Stat(defaultPath); err == nil {
+			files = []os.DirEntry{fileEntry{defaultPath, defaultFileName}}
+		} else {
+			allFiles, err := os.ReadDir(cfg.Dicts)
+			if err != nil {
+				return fmt.Errorf("read dir %s: %w", cfg.Dicts, err)
+			}
+			for _, f := range allFiles {
+				if !f.IsDir() && strings.HasPrefix(f.Name(), "def_") && strings.HasSuffix(f.Name(), ".txt") {
+					files = append(files, f)
+				}
+			}
+		}
+	}
+
+	if len(files) == 0 {
+		db.log.Info("No definition files found to seed")
+		return nil
+	}
+
+	for _, file := range files {
+		f, err := os.Open(filepath.Join(cfg.Dicts, file.Name()))
+		if err != nil {
+			return fmt.Errorf("open file %s: %w", file.Name(), err)
+		}
+		defer f.Close()
+
+		scanner := bufio.NewScanner(f)
+		batch := []dbmodel.Definition{}
+		fullTableName := "definitions.definitions"
+
+		for scanner.Scan() {
+			line := strings.TrimSpace(scanner.Text())
+			if line == "" {
+				continue
+			}
+
+			parts := strings.SplitN(line, ":", 3)
+			if len(parts) < 2 {
+				db.log.Warn(fmt.Sprintf("Invalid format in %s: %s, skipping", file.Name(), line))
+				continue
+			}
+
+			word := strings.TrimSpace(parts[0])
+			definition := strings.TrimSpace(parts[1])
+			dictionary := consts.DefaultDict
+			if len(parts) == 3 {
+				dictionary = strings.TrimSpace(parts[2])
+			}
+
+			if word == "" || definition == "" {
+				db.log.Warn(fmt.Sprintf("Empty word or definition in %s: %s, skipping", file.Name(), line))
+				continue
+			}
+
+			batch = append(batch, dbmodel.Definition{
+				Word:       word,
+				Definition: definition,
+				Dictionary: dictionary,
+			})
+
+			if len(batch) >= cfg.BatchSize {
+				if err := db.Db.WithContext(ctx).Table(fullTableName).
+					Clauses(clause.OnConflict{DoNothing: true}).Create(&batch).Error; err != nil {
+					return fmt.Errorf("seed definitions to %s: %w", fullTableName, err)
+				}
+				db.log.Info(fmt.Sprintf("Seeded %d definitions to %s", len(batch), fullTableName))
+				batch = []dbmodel.Definition{}
+			}
+		}
+
+		if err := scanner.Err(); err != nil {
+			return fmt.Errorf("scan file %s: %w", file.Name(), err)
+		}
+
+		if len(batch) > 0 {
+			if err := db.Db.WithContext(ctx).Table(fullTableName).
+				Clauses(clause.OnConflict{DoNothing: true}).Create(&batch).Error; err != nil {
+				return fmt.Errorf("seed definitions to %s: %w", fullTableName, err)
+			}
+			db.log.Info(fmt.Sprintf("Seeded %d definitions to %s", len(batch), fullTableName))
 		}
 	}
 

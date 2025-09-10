@@ -10,17 +10,17 @@ function App() {
     <Box
       sx={{
         display: 'flex',
-        justifyContent: 'center', // Центрирование по горизонтали
-        alignItems: 'center',     // Центрирование по вертикали
-        minHeight: '100vh',       // Полная высота экрана
-        width: '100vw',           // Полная ширина экрана (добавлено для фикса в некоторых браузерах)
+        justifyContent: 'center',
+        alignItems: 'center',
+        minHeight: '100vh',
+        width: '100vw',
         bgcolor: 'background.default',
-        textAlign: 'center',      // Центрирование текста внутри
+        textAlign: 'center',
       }}
     >
-      <Container maxWidth="xs" sx={{ py: 4, mx: 'auto' }}> {/* mx: 'auto' явно центрирует контейнер */}
+      <Container maxWidth="md" sx={{ py: 4, mx: 'auto' }}>
         <Typography variant="h4" gutterBottom>
-          Online Dictionary
+          Онлайн-словарь
         </Typography>
 
         <FormControl fullWidth sx={{ mb: 2 }}>
@@ -28,7 +28,7 @@ function App() {
           <Select
             labelId="dictionary-select-label"
             value={dictionary}
-            label="Dictionary"
+            label="Словарь"
             onChange={(e) => setDictionary(e.target.value)}
           >
             <MenuItem value="russian">Русский</MenuItem>

@@ -59,6 +59,10 @@ func (app *App) Run(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+		err = db.SeedDefinitions(ctx, app.cfg, "")
+		if err != nil {
+			return err
+		}
 	}
 
 	if err := c.FillTrieWithWords(ctx, consts.DefaultDict); err != nil {

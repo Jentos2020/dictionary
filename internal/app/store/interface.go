@@ -7,9 +7,17 @@ import (
 )
 
 type (
+	DefinitionReadWriter interface {
+		GetDefinition(ctx context.Context, word, dict string) (string, bool, error)
+		AddDefinition(ctx context.Context, def dbmodel.Definition, dict string) error
+		UpdateDefinition(ctx context.Context, word, newDef, dict string) (bool, error)
+		RemoveDefinition(ctx context.Context, word, dict string) (bool, error)
+	}
+
 	Repository interface {
 		WordReadWriter
 		DictsReadWriter
+		DefinitionReadWriter
 		Ping
 	}
 

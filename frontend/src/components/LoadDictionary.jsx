@@ -1,34 +1,47 @@
 import { useState } from 'react';
-import { TextField, Button, Box } from '@mui/material';
+import { TextField, Button, Box, FormControl, InputLabel, Select, MenuItem } from '@mui/material';
 import axios from 'axios';
 
 function LoadDictionary() {
   const [name, setName] = useState('');
 
   const handleLoad = async () => {
-    if (!name) return alert('Name required');
+    if (!name) return alert('Название словаря обязательно');
     try {
-      // API call (update port if needed)
       await axios.post(`/api/dictionaries/add/${name}`);
-      alert('Dictionary loaded successfully!');
+      alert('Словарь успешно загружен!');
       setName('');
     } catch (err) {
       console.log('Axios error:', err, err.response);
-      alert('Error loading dictionary: ' + (err.response?.data || err.message));
+      alert('Ошибка при загрузке словаря: ' + (err.response?.data || err.message));
     }
   };
 
   return (
-    <Box display="flex" alignItems="center">
-      <TextField
-        label="Название словаря (например, russian)"
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-        variant="outlined"
-        sx={{ mr: 1, flexGrow: 1 }}
-      />
+    <Box display="flex" alignItems="center" gap={1}>
+      <FormControl sx={{ flexGrow: 1 }}>
+        <TextField
+          label="Название словаря"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          variant="outlined"
+        />
+      </FormControl>
+      <FormControl sx={{ minWidth: 120 }}>
+        <InputLabel id="dictionary-select-label">Выбрать словарь</InputLabel>
+        <Select
+          labelId="dictionary-select-label"
+          value=""
+          label="Выбрать словарь"
+          onChange={(e) => setName(e.target.value)}
+        >
+          <MenuItem value="">Ручной ввод</MenuItem>
+          <MenuItem value="russian">Русский</MenuItem>
+          <MenuItem value="english">Английский</MenuItem>
+        </Select>
+      </FormControl>
       <Button variant="contained" onClick={handleLoad}>
-        Обновить
+        Загрузить
       </Button>
     </Box>
   );

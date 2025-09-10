@@ -7,6 +7,13 @@ import (
 	"github.com/gofiber/websocket/v2"
 )
 
+type WSRequest struct {
+	Type       string `json:"type"`
+	Prefix     string `json:"prefix,omitempty"`
+	Word       string `json:"word,omitempty"`
+	Dictionary string `json:"dictionary,omitempty"`
+}
+
 func WSHandler(h *Handler) func(*websocket.Conn) {
 	return func(c *websocket.Conn) {
 		clientAddr := c.RemoteAddr().String()
@@ -25,31 +32,70 @@ func WSHandler(h *Handler) func(*websocket.Conn) {
 			}
 			h.c.Logger.Debug("WebSocket received", "client", clientAddr, "msg", string(msg))
 
-			var req entity.SearchRequest
+			var req WSRequest
 			if err := json.Unmarshal(msg, &req); err != nil {
-				h.sendError(c, "Invalid JSON")
+				h.sendErrorWithType(c, "error", "Invalid JSON")
 				continue
 			}
 
-			currentTrie := h.c.Trie.Load().(*entity.Trie)
-			wordsStr := currentTrie.GetWordsByPrefix(req.Prefix)
-			words := make(entity.Words, len(wordsStr))
-			for i, s := range wordsStr {
-				words[i] = entity.Word{Data: s}
+			if req.Type == "" {
+				h.sendErrorWithType(c, "error", "Missing 'type' in request")
+				continue
 			}
-			resp := entity.SearchResponse{Words: words}
 
-			respJSON, _ := json.Marshal(resp)
-			if err := c.WriteMessage(websocket.TextMessage, respJSON); err != nil {
-				h.c.Logger.Error("WebSocket write error", "client", clientAddr, "error", err)
-				break
+			if req.Type == "search" {
+				if req.Prefix == "" {
+					h.sendErrorWithType(c, "search", "Missing prefix")
+					continue
+				}
+				currentTrie := h.c.Trie.Load().(*entity.Trie)
+				wordsStr := currentTrie.GetWordsByPrefix(req.Prefix)
+				words := make(entity.Words, len(wordsStr))
+				for i, s := range wordsStr {
+					words[i] = entity.Word{Data: s}
+				}
+				resp := entity.SearchResponse{Words: words}
+				respJSON, _ := json.Marshal(resp)
+				if err := c.WriteMessage(websocket.TextMessage, respJSON); err != nil {
+					h.c.Logger.Error("WebSocket write error", "client", clientAddr, "error", err)
+					break
+				}
+			} else if req.Type == "get_definition" {
+				if req.Word == "" {
+					h.sendErrorWithType(c, "get_definition", "Missing word")
+					continue
+				}
+
+				def, found, err := h.c.GetDefinition(h.c.Ctx, req.Word, req.Dictionary)
+				resp := map[string]interface{}{
+					"type": "definition",
+					"word": req.Word,
+				}
+				if err != nil {
+					resp["error"] = err.Error()
+				} else if found {
+					resp["definition"] = def
+				} else {
+					resp["error"] = "Definition not found"
+				}
+				respJSON, _ := json.Marshal(resp)
+				if err := c.WriteMessage(websocket.TextMessage, respJSON); err != nil {
+					h.c.Logger.Error("WebSocket write error", "client", clientAddr, "error", err)
+					break
+				}
+			} else {
+				h.sendErrorWithType(c, req.Type, "Unknown type")
 			}
 		}
 	}
 }
 
 func (h *Handler) sendError(c *websocket.Conn, msg string) {
-	resp := entity.SearchResponse{Error: msg}
+	h.sendErrorWithType(c, "error", msg)
+}
+
+func (h *Handler) sendErrorWithType(c *websocket.Conn, typ, msg string) {
+	resp := map[string]interface{}{"type": typ, "error": msg}
 	respJSON, _ := json.Marshal(resp)
 	c.WriteMessage(websocket.TextMessage, respJSON)
 }

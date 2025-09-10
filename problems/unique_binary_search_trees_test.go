@@ -62,9 +62,6 @@ func TestUniqueBinarySearchTrees(t *testing.T) {
 	}
 }
 
-// =========================
-// Основная функция
-// =========================
 func generateTrees(n int) []*TreeNode {
 	if n == 0 {
 		return []*TreeNode{}
@@ -95,9 +92,6 @@ func generate(start, end int) []*TreeNode {
 	return allTrees
 }
 
-// =========================
-// Преобразование дерева в массив
-// =========================
 func treeToArray(root *TreeNode) []interface{} {
 	if root == nil {
 		return []interface{}{}
@@ -118,7 +112,6 @@ func treeToArray(root *TreeNode) []interface{} {
 		}
 	}
 
-	// Убираем лишние nil в конце
 	for len(result) > 0 && result[len(result)-1] == nil {
 		result = result[:len(result)-1]
 	}

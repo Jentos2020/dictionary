@@ -23,16 +23,23 @@ func (c *Controller) RemoveWord(ctx context.Context, word string, dict string) e
 	}
 
 	if dict != "" {
-		deleted, err := c.DB.RemoveWord(ctx, dbmodel.Word{Data: word}, dict)
+		removed, err := c.DB.RemoveWord(ctx, dbmodel.Word{Data: word}, dict)
 		if err != nil {
 			return errors.NewF("delete word from %s: %w", dict, err)
 		}
-		if !deleted {
+		if !removed {
 			return errors.ErrNotFound
 		}
 
 		currentTrie := c.Trie.Load().(*entity.Trie)
 		currentTrie.Delete(word)
+
+		if err := c.RemoveDefinition(ctx, word, dict); err != nil && !errors.Is(err, errors.ErrNotFound) {
+			c.Logger.Warn("Error removing definition during word removal", "error", err, "word", word, "dict", dict)
+		} else if errors.Is(err, errors.ErrNotFound) || err == nil {
+			c.Logger.Info("Definition removed during word removal", "word", word, "dict", dict)
+		}
+
 		return nil
 	}
 
@@ -43,13 +50,15 @@ func (c *Controller) RemoveWord(ctx context.Context, word string, dict string) e
 
 	found := false
 	for _, t := range tables {
-		deleted, err := c.DB.RemoveWord(ctx, dbmodel.Word{Data: word}, t)
+		removed, err := c.DB.RemoveWord(ctx, dbmodel.Word{Data: word}, t)
 		if err != nil {
 			return errors.NewF("delete word from %s: %w", t, err)
 		}
-		if deleted {
+		if removed {
 			found = true
-			break
+			if err := c.RemoveDefinition(ctx, word, t); err != nil && !errors.Is(err, errors.ErrNotFound) {
+				c.Logger.Warn("Error removing definition in multi-dict removal", "error", err, "word", word, "dict", t)
+			}
 		}
 	}
 
@@ -79,6 +88,22 @@ func (c *Controller) UpdateWord(ctx context.Context, oldWord, newWord, dict stri
 		currentTrie := c.Trie.Load().(*entity.Trie)
 		currentTrie.Delete(oldWord)
 		currentTrie.Insert(newWord)
+
+		oldDef, found, err := c.GetDefinition(ctx, oldWord, dict)
+		if err != nil {
+			c.Logger.Warn("Error checking definition during word update", "error", err, "word", oldWord, "dict", dict)
+			return nil
+		}
+		if found {
+			if err := c.RemoveDefinition(ctx, oldWord, dict); err != nil {
+				c.Logger.Warn("Error removing old definition during word update", "error", err, "word", oldWord, "dict", dict)
+			}
+			if err := c.AddDefinition(ctx, newWord, oldDef, dict); err != nil {
+				c.Logger.Warn("Error adding new definition during word update", "error", err, "word", newWord, "dict", dict)
+			}
+			c.Logger.Info("Definition synced during word update", "oldWord", oldWord, "newWord", newWord, "dict", dict)
+		}
+
 		return nil
 	}
 
@@ -95,7 +120,20 @@ func (c *Controller) UpdateWord(ctx context.Context, oldWord, newWord, dict stri
 		}
 		if ok {
 			updated = true
-			break
+			oldDef, found, err := c.GetDefinition(ctx, oldWord, t)
+			if err != nil {
+				c.Logger.Warn("Error checking definition during multi-dict update", "error", err, "word", oldWord, "dict", t)
+				continue
+			}
+			if found {
+				if err := c.RemoveDefinition(ctx, oldWord, t); err != nil {
+					c.Logger.Warn("Error removing old definition in multi-dict update", "error", err, "word", oldWord, "dict", t)
+				}
+				if err := c.AddDefinition(ctx, newWord, oldDef, t); err != nil {
+					c.Logger.Warn("Error adding new definition in multi-dict update", "error", err, "word", newWord, "dict", t)
+				}
+				c.Logger.Info("Definition synced in multi-dict update", "oldWord", oldWord, "newWord", newWord, "dict", t)
+			}
 		}
 	}
 

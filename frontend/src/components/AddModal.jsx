@@ -8,19 +8,24 @@ function AddModal({ open, onClose, word, dictionary, onAddComplete }) {
   const handleAdd = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/api/words', { data: word, dictionary });
-      setSuccess(true); // Переключаем на сообщение об успехе
+      await axios.post('/api/words', { 
+        data: word, 
+        dictionary: dictionary 
+      }, {
+        headers: { 'Content-Type': 'application/json' }
+      });
+      setSuccess(true);
     } catch (err) {
       console.log('Axios error:', err, err.response);
-      alert('Error adding word: ' + (err.response?.data || err.message)); // Оставляем alert для ошибок
+      alert('Ошибка при добавлении слова: ' + (err.response?.data || err.message));
     }
   };
 
   const handleClose = () => {
     if (success) {
-      onAddComplete(); // Вызываем, только если успех
+      onAddComplete();
     }
-    setSuccess(false); // Сбрасываем состояние
+    setSuccess(false);
     onClose();
   };
 
@@ -30,21 +35,21 @@ function AddModal({ open, onClose, word, dictionary, onAddComplete }) {
         <>
           <DialogTitle>Успех</DialogTitle>
           <DialogContent>
-            <Typography>Слово "{word}" было успешно добавлено в словарь "{dictionary}".</Typography>
+            <Typography>Слово "{word}" добавлено в словарь "{dictionary}".</Typography>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleClose} color="primary">OK</Button>
+            <Button onClick={handleClose} color="primary">ОК</Button>
           </DialogActions>
         </>
       ) : (
         <>
           <DialogTitle>Добавить слово</DialogTitle>
           <DialogContent>
-            <Typography>Добавить "{word}" в словарь "{dictionary}"?</Typography>
+            <Typography>Добавить слово "{word}" в словарь "{dictionary}"?</Typography>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose}>Отмена</Button>
-            <Button onClick={handleAdd} color="primary">Подтвердить</Button>
+            <Button onClick={handleAdd} color="primary">Добавить</Button>
           </DialogActions>
         </>
       )}

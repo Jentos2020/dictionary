@@ -2,19 +2,26 @@ import { useState } from 'react';
 import { Dialog, DialogTitle, DialogContent, DialogActions, Button, Typography } from '@mui/material';
 import axios from 'axios';
 
-function DeleteConfirm({ open, onClose, word, dictionary, onDeleteComplete }) {
+function DeleteConfirm({ open, onClose, word, dictionary, onDeleteComplete, isDefinition }) {
   const [success, setSuccess] = useState(false);
 
   const handleDelete = async (e) => {
     e.preventDefault();
     try {
-      await axios.delete(`/api/words/${word}`, {
-        data: { dictionary },
-      });
+      const endpoint = isDefinition 
+        ? `/api/definitions/${word}?dictionary=${dictionary}`
+        : `/api/words/${word}`;
+      const config = {
+        headers: { 'Content-Type': 'application/json' }
+      };
+      if (!isDefinition) {
+        config.data = { dictionary: dictionary };
+      }
+      await axios.delete(endpoint, config);
       setSuccess(true);
     } catch (err) {
       console.log('Axios error:', err, err.response);
-      alert('Error deleting word: ' + (err.response?.data || err.message));
+      alert(`Ошибка при удалении ${isDefinition ? 'определения' : 'слова'}: ` + (err.response?.data || err.message));
     }
   };
 
@@ -32,17 +39,23 @@ function DeleteConfirm({ open, onClose, word, dictionary, onDeleteComplete }) {
         <>
           <DialogTitle>Успех</DialogTitle>
           <DialogContent>
-            <Typography>Слово "{word}" было успешно удалено из словаря "{dictionary}".</Typography>
+            <Typography>
+              {isDefinition ? `Определение для "${word}" удалено из словаря "${dictionary}".` : `Слово "${word}" удалено из словаря "${dictionary}".`}
+            </Typography>
           </DialogContent>
           <DialogActions>
-            <Button onClick={handleClose} color="primary">OK</Button>
+            <Button onClick={handleClose} color="primary">ОК</Button>
           </DialogActions>
         </>
       ) : (
         <>
-          <DialogTitle>Удалить слово</DialogTitle>
+          <DialogTitle>{isDefinition ? 'Удалить определение' : 'Удалить слово'}</DialogTitle>
           <DialogContent>
-            <Typography>Удалить "{word}" из словаря "{dictionary}"? Это действие нельзя отменить.</Typography>
+            <Typography>
+              {isDefinition
+                ? `Удалить определение для "${word}" из словаря "${dictionary}"?`
+                : `Удалить слово "${word}" из словаря "${dictionary}"?`} Это действие нельзя отменить.
+            </Typography>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleClose}>Отмена</Button>

@@ -1,42 +1,74 @@
 import { useState } from 'react';
 import { Button, Box } from '@mui/material';
-import UpdateModal from './UpdateModal.jsx';
+import UpdateDefinitionModal from './UpdateDefinitionModal.jsx';
 import DeleteConfirm from './DeleteConfirm.jsx';
+import UpdateModal from './UpdateModal.jsx';
 
 function WordActions({ word, dictionary, onActionComplete }) {
-  const [showUpdateModal, setShowUpdateModal] = useState(false);
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [showUpdateDefinitionModal, setShowUpdateDefinitionModal] = useState(false);
+  const [showDeleteDefinitionConfirm, setShowDeleteDefinitionConfirm] = useState(false);
+  const [showUpdateWordModal, setShowUpdateWordModal] = useState(false);
+  const [showDeleteWordConfirm, setShowDeleteWordConfirm] = useState(false);
 
   return (
-    <Box sx={{ mt: 2 }}>
+    <Box sx={{ mt: 2, display: 'flex', gap: 1 }}>
       <Button
         variant="outlined"
         color="primary"
-        sx={{ mr: 1 }}
-        onClick={() => setShowUpdateModal(true)}
+        onClick={() => setShowUpdateWordModal(true)}
       >
-        Update Word
+        Изменить слово
       </Button>
       <Button
         variant="outlined"
         color="error"
-        onClick={() => setShowDeleteConfirm(true)}
+        onClick={() => setShowDeleteWordConfirm(true)}
       >
-        Delete Word
+        Удалить слово
+      </Button>
+      <Button
+        variant="outlined"
+        color="primary"
+        onClick={() => setShowUpdateDefinitionModal(true)}
+      >
+        Изменить определение
+      </Button>
+      <Button
+        variant="outlined"
+        color="error"
+        onClick={() => setShowDeleteDefinitionConfirm(true)}
+      >
+        Удалить определение
       </Button>
       <UpdateModal
-        open={showUpdateModal}
-        onClose={() => setShowUpdateModal(false)}
-        oldWord={word}
+        open={showUpdateWordModal}
+        onClose={() => setShowUpdateWordModal(false)}
+        word={word}
         dictionary={dictionary}
         onUpdateComplete={onActionComplete}
       />
       <DeleteConfirm
-        open={showDeleteConfirm}
-        onClose={() => setShowDeleteConfirm(false)}
+        open={showDeleteWordConfirm}
+        onClose={() => setShowDeleteWordConfirm(false)}
         word={word}
         dictionary={dictionary}
         onDeleteComplete={onActionComplete}
+        isDefinition={false}
+      />
+      <UpdateDefinitionModal
+        open={showUpdateDefinitionModal}
+        onClose={() => setShowUpdateDefinitionModal(false)}
+        word={word}
+        dictionary={dictionary}
+        onUpdateComplete={onActionComplete}
+      />
+      <DeleteConfirm
+        open={showDeleteDefinitionConfirm}
+        onClose={() => setShowDeleteDefinitionConfirm(false)}
+        word={word}
+        dictionary={dictionary}
+        onDeleteComplete={onActionComplete}
+        isDefinition={true}
       />
     </Box>
   );

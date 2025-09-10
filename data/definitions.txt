@@ -1,0 +1,80 @@
+apple:A sweet fruit that grows on trees:english
+яблоко:Сладкий фрукт, который растет на деревьях:russian
+computer:An electronic device for storing and processing data:english
+компьютер:Электронное устройство для хранения и обработки данных:russian
+sun:The star at the center of our solar system:english
+солнце:Звезда в центре нашей солнечной системы:russian
+moon:A natural satellite orbiting a planet:english
+луна:Естественный спутник, вращающийся вокруг планеты:russian
+tree:A perennial plant with an elongated stem, or trunk:english
+дерево:Многолетнее растение с удлиненным стволом:russian
+river:A large natural stream of water:english
+река:Большой естественный поток воды:russian
+mountain:A large natural elevation of the earth's surface:english
+гора:Большое естественное возвышение поверхности земли:russian
+car:A road vehicle with four wheels powered by an engine:english
+машина:Дорожное транспортное средство с четырьмя колесами и двигателем:russian
+house:A building for human habitation:english
+дом:Здание для жилья человека:russian
+school:A place where people go to learn:english
+школа:Место, куда люди ходят, чтобы учиться:russian
+friend:A person with whom one has a bond of mutual affection:english
+друг:Человек, с которым есть взаимная привязанность:russian
+food:Something that provides nourishment:english
+еда:То, что обеспечивает питание:russian
+music:Vocal or instrumental sounds combined to produce harmony:english
+музыка:Вокальные или инструментальные звуки, объединенные для создания гармонии:russian
+love:An intense feeling of deep affection:english
+любовь:Сильное чувство глубокой привязанности:russian
+water:A transparent, tasteless, odorless liquid essential for life:english
+вода:Прозрачная, безвкусная, без запаха жидкость, необходимая для жизни:russian
+fire:The process of combustion producing heat and light:english
+огонь:Процесс горения, производящий тепло и свет:russian
+air:The invisible gaseous substance surrounding the Earth:english
+воздух:Невидимое газообразное вещество, окружающее Землю:russian
+dog:A domesticated carnivorous mammal:english
+собака:Домашнее плотоядное животное:russian
+cat:A small domesticated carnivorous mammal:english
+кошка:Малое домашнее плотоядное животное:russian
+bird:A warm-blooded egg-laying vertebrate with feathers:english
+птица:Теплокровное яйцекладущее позвоночное с перьями:russian
+city:A large and significant town:english
+город:Большой и значимый населенный пункт:russian
+language:A system of communication used by a particular community:english
+язык:Система общения, используемая определенным сообществом:russian
+book:A collection of written or printed pages bound together:english
+книга:Собрание написанных или напечатанных страниц, соединенных вместе:russian
+road:A wide way leading from one place to another:english
+дорога:Широкий путь, ведущий из одного места в другое:russian
+family:A group consisting of parents and children living together:english
+семья:Группа, состоящая из родителей и детей, живущих вместе:russian
+time:The indefinite continued progress of existence and events:english
+время:Бесконечный процесс существования и событий:russian
+money:A medium of exchange in the form of coins or banknotes:english
+деньги:Средство обмена в виде монет или банкнот:russian
+computer:Device capable of performing calculations and operations:english
+компьютер:Устройство, способное выполнять вычисления и операции:russian
+phone:A device used to communicate with others over distances:english
+телефон:Устройство для общения с другими на расстоянии:russian
+chair:A piece of furniture for sitting on:english
+стул:Предмет мебели для сидения:russian
+table:A piece of furniture with a flat top and legs:english
+стол:Предмет мебели с плоской поверхностью и ножками:russian
+window:An opening in a wall to admit light or air:english
+окно:Отверстие в стене для проникновения света или воздуха:russian
+door:A hinged or sliding barrier used to close an entrance:english
+дверь:Дверца на петлях или раздвижная перегородка для закрытия входа:russian
+train:A series of connected vehicles traveling on railways:english
+поезд:Серия соединенных вагонов, движущихся по рельсам:russian
+plane:A powered flying vehicle with fixed wings:english
+самолет:Механическое летательное средство с неподвижными крыльями:russian
+ocean:A vast body of salt water covering much of the Earth:english
+океан:Огромное соленое водное пространство, покрывающее большую часть Земли:russian
+light:Electromagnetic radiation visible to the human eye:english
+свет:Электромагнитное излучение, видимое человеческому глазу:russian
+darkness:Absence of light:english
+темнота:Отсутствие света:russian
+earth:The planet on which we live:english
+земля:Планета, на которой мы живем:russian
+computer:An electronic machine that processes information:english
+компьютер:Электронная машина, которая обрабатывает информацию:russian
